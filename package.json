@@ -1,0 +1,12 @@
+{
+  "name": "serverCV",
+  "version": "0.0.1",
+  "description": "Github GraphQL API middleware",
+  "main": "server.js",
+  "author": "Iván Rodriguez <ivan.rodriguez@bq.com>",
+  "license": "MIT",
+  "keywords": [
+    "GraphQL",
+    "Github"
+  ]
+}
