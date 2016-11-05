@@ -1,28 +1,23 @@
 const koa = require('koa');
-var app = koa();
+const router = require('koa-router')();
+const koaLogger = require('koa-logger');
+const minilog = require('minilog');
 
-// x-response-time
+const log = minilog('Koa server');
+const app = koa();
 
-app.use(function *(next){
-  var start = new Date;
+const port = 3000;
+
+minilog.enable();
+
+router.get('/', function *(next) {
+  this.type = 'json';
+  this.body = JSON.stringify({response: 'Hello'});
   yield next;
-  var ms = new Date - start;
-  this.set('X-Response-Time', ms + 'ms');
 });
 
-// logger
-
-app.use(function *(next){
-  var start = new Date;
-  yield next;
-  var ms = new Date - start;
-  console.log('%s %s - %s', this.method, this.url, ms);
-});
-
-// response
-
-app.use(function *(){
-  this.body = 'Hello World';
-});
-
-app.listen(3000);
+app
+.use(koaLogger())
+.use(router.routes())
+.use(router.allowedMethods())
+.listen(port, () => log.info(`Listening on port: ${port}`));
