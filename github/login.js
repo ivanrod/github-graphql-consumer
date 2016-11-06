@@ -31,10 +31,27 @@ function login(name, pwd) {
         if (response.status < 400) {
           return json.token;
         } else {
-          throw new Error(json.message);
+          let error = new Error(json.message);
+          error.status = response.status;
+          throw error;
         }
       })
     );
 }
 
-module.exports = login;
+module.exports = function *() {
+  try {
+    yield login.apply(this, arguments).then(token => this.body = {token});
+  } catch (err) {
+
+    if (!err.status) {
+      this.status = 500;
+    } else {
+      this.set('WWW-Authenticate', 'Basic');
+      this.status = 401;
+      this.body = {error: 'Unauthorized', message: err.message};
+    }
+  }
+};
+
+module.exports.login = login;
