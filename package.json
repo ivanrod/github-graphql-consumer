@@ -1,5 +1,5 @@
 {
-  "name": "serverCV",
+  "name": "github-graphql-consumer",
   "version": "0.0.1",
   "description": "Github GraphQL API middleware",
   "main": "server.js",
@@ -32,6 +32,7 @@
     "lokka": "^1.7.0",
     "lokka-transport-http": "^1.6.1",
     "minilog": "^3.0.1",
+    "moment": "^2.15.2",
     "node-fetch": "^1.6.3"
   }
 }
