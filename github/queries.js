@@ -1,7 +1,10 @@
 const moment = require('moment');
+const minilog = require('minilog');
 const connector = require('./graphqlConnector.js');
 
+const log = minilog('Koa server');
 const lastMonth = moment().subtract(1, 'month').toISOString();
+minilog.enable();
 
 function getLastMonthCommits () {
   const lastMonthCommits = `
@@ -20,7 +23,7 @@ function getLastMonthCommits () {
             ref(qualifiedName: "master") {
               target {
                 ... on Commit {
-                  history(first:30 since:"${lastMonth}") {
+                  history(first:30 since:"${lastMonth}" author: {emails: ["frivanrodriguez@gmail.com", "ivan.rodriguez@bq.com"]}) {
                     pageInfo{
                       hasNextPage
                     }
@@ -49,21 +52,19 @@ function getLastMonthCommits () {
   `;
 
   return connector(lastMonthCommits).then(response => {
-    let {viewer: { repositories: { totalCount: totalRepositories, edges: repositories } }} = response;
-
+    let {viewer: { repositories: { totalCount: totalRepositories, edges: repositories } } } = response;
     repositories = repositories.map(({node: repository}) => {
+
       try {
-        const { name, ref: {target: { history: { edges: commits } } } } = repository;
+        const { name, ref: { target: { history: { edges: commits } } } } = repository;
         // TODO: Identify user commits with other function
         return {
           name,
           commits
         };
       }
-      catch (error) {
-        let error = new Error(error);
-        error.repository = repository;
-        throw error;
+      catch (err) {
+        log.error(`Error reading repository "${repository.name}": ${err}`);
       }
     });
 

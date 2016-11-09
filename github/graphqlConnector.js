@@ -6,7 +6,7 @@ const login = require('./login.js').login;
 
 let token;
 
-function * executeQuery(query) {
+function * executeQuery(query, fragments = []) {
 
   if (!token) {
     const { name, password } = config.get('credentials.user');
@@ -19,9 +19,13 @@ function * executeQuery(query) {
     transport
   });
 
-  return client.query(query)
+  fragments.forEach( fragment => {
+    client.createFragment(fragment);
+  });
+
+  return client.query(query);
 }
 
-module.exports = function(query) {
-  return co(executeQuery(query));
+module.exports = function() {
+  return co(executeQuery.apply(this, arguments));
 }
