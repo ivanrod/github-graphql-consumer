@@ -3,15 +3,62 @@ const minilog = require('minilog');
 const connector = require('./graphqlConnector.js');
 
 const log = minilog('Koa server');
-const lastMonth = moment().subtract(1, 'month').toISOString();
+
 minilog.enable();
 
-function getLastMonthCommits () {
+function selectLastMonthCommits(queryResponse) {
+  let {
+    viewer: {
+      repositories: {
+        pageInfo: {
+          hasNextPage: hasMoreRepositories
+        },
+        totalCount: totalRepositories,
+        edges: repositories
+      }
+    }
+  } = queryResponse;
+
+  repositories = repositories.map(({
+    node: repository
+  }) => {
+
+    try {
+      const {
+        name,
+        ref: {
+          target: {
+            history: {
+              edges: commits
+            }
+          }
+        }
+      } = repository;
+
+      return {
+        name,
+        commits
+      };
+    } catch (err) {
+      log.error(`Error reading repository "${repository.name}": ${err}`);
+    }
+  });
+
+  return {
+    totalRepositories,
+    hasMoreRepositories,
+    repositories
+  };
+}
+
+function repositories() {
+  const lastMonth = moment().subtract(1, 'month').toISOString();
+
   const lastMonthCommits = `
   {
     viewer {
       login
-      repositories(first:30) {
+      repositories(first: 30 orderBy: {field: UPDATED_AT direction: DESC}) {
         pageInfo {
           hasNextPage
         }
@@ -23,12 +70,13 @@ function getLastMonthCommits () {
             ref(qualifiedName: "master") {
               target {
                 ... on Commit {
-                  history(first:30 since:"${lastMonth}" author: {emails: ["frivanrodriguez@gmail.com", "ivan.rodriguez@bq.com"]}) {
+                  history(first:100 since:"${lastMonth}" author: {emails: ["frivanrodriguez@gmail.com", "ivan.rodriguez@bq.com"]}) {
                     pageInfo{
                       hasNextPage
                     }
                     edges {
                       node{
+                        message
                         author{
                           user{
                             id
@@ -51,28 +99,7 @@ function getLastMonthCommits () {
   }
   `;
 
-  return connector(lastMonthCommits).then(response => {
-    let {viewer: { repositories: { totalCount: totalRepositories, edges: repositories } } } = response;
-    repositories = repositories.map(({node: repository}) => {
-
-      try {
-        const { name, ref: { target: { history: { edges: commits } } } } = repository;
-        // TODO: Identify user commits with other function
-        return {
-          name,
-          commits
-        };
-      }
-      catch (err) {
-        log.error(`Error reading repository "${repository.name}": ${err}`);
-      }
-    });
-
-    return {
-      totalRepositories,
-      repositories
-    };
-  });
+  return connector(lastMonthCommits).then(selectLastMonthCommits);
 }
 
 const stargazers = `
@@ -93,19 +120,7 @@ const stargazers = `
 }
 `;
 
-const repositories = `
-{
-  viewer {
-    login
-    repositories {
-      totalCount
-    }
-  }
-}
-`;
-
 module.exports = {
   repositories,
   stargazers,
-  getLastMonthCommits
 };
