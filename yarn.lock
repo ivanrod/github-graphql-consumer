@@ -681,6 +681,12 @@ jsonpointer@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/jsonpointer/-/jsonpointer-4.0.0.tgz#6661e161d2fc445f19f98430231343722e1fcbd5"
 
+kcors:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/kcors/-/kcors-1.3.1.tgz#9bb64dce54623918ac58dd637e5e961cae18d667"
+  dependencies:
+    copy-to "^2.0.1"
+
 keygrip@~1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/keygrip/-/keygrip-1.0.1.tgz#b02fa4816eef21a8c4b35ca9e52921ffc89a30e9"
