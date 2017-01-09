@@ -82,6 +82,7 @@ function repositories() {
                             id
                             name
                           }
+                          date
                         }
                       }
                     }
